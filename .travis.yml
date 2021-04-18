@@ -1,14 +1,22 @@
 language: java
 jdk: oraclejdk9
 
+services:
+  - docker
+  
 env:
-  - COVERAGE=0.05 BUILD_TARGET=./monolithic/ui
-  - COVERAGE=0.14 BUILD_TARGET=./monolithic/service/cart
-  - COVERAGE=0.0 BUILD_TARGET=./monolithic/service/user
-  - COVERAGE=0.36 BUILD_TARGET=./monolithic/repository/order
-  - COVERAGE=0.0 BUILD_TARGET=./monolithic/repository/cart
-  - COVERAGE=0.12 BUILD_TARGET=./monolithic/repository/product
-  - COVERAGE=0.31 BUILD_TARGET=./monolithic/repository/user
+  matrix:
+    - COVERAGE=0.05 BUILD_TARGET=./monolithic/ui
+    - COVERAGE=0.14 BUILD_TARGET=./monolithic/service/cart
+    - COVERAGE=0.0 BUILD_TARGET=./monolithic/service/user
+    - COVERAGE=0.36 BUILD_TARGET=./monolithic/repository/order
+    - COVERAGE=0.0 BUILD_TARGET=./monolithic/repository/cart
+    - COVERAGE=0.12 BUILD_TARGET=./monolithic/repository/product
+    - COVERAGE=0.31 BUILD_TARGET=./monolithic/repository/user
+
+global:
+  - DOCKER_LOGIN=giusprog
+  - secure:MIGJAoGBAKY1mJtfyxF51Z8XSE4q/kLixEUegc4UGyP0lTH/URfJ3Yg7HzNwOXNg\nxWYtBWg8foI6H71J25iDGFYFA7ihY1GwDDlfd/RmYzBHD3nrVRdzYvvqKZgAfS9J\nvQnqfMVBRNYlP6osvgf394BvOTCrXh7WEQX6zLD0PO1wKgIEHhBzAgMBAAE=
 
 install:
   - ./gradlew clean jar
@@ -16,3 +24,9 @@ script:
   - ./gradlew -p $BUILD_TARGET check
 after_success:
   - find . -name jacocoTestReport.csv|xargs cat|awk -F',' '{print $3" "$4" "$5}'
+
+deploy:
+  provider: script
+  script: bash -c "echo \"${DOCKER_PASSWORD}\" | docker login --username \"${DOCKER_LOGIN}\" --password-stdin ;"
+  on:
+    all_branches: true
